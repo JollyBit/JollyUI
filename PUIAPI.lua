@@ -45,6 +45,7 @@ Late-N-Sea
 ]]
 
 local PerfaUi = {}
+local UiId = "PerfaUI"
 
 -- > THEME
 PerfaUi.Theme = {
@@ -269,6 +270,7 @@ end
 -- > MAIN UI
 function PerfaUi.new(customName):ScreenGui
 	customName = customName or "PerfaUI"
+	UiId = customName
 
 	local screengui = Instance.new("ScreenGui")
 	screengui.IgnoreGuiInset = true 
@@ -290,7 +292,7 @@ end
 -- > NOTIFICATIONS
 function PerfaUi:Notification(text)
 	if not text then return end
-	local gui = core:FindFirstChildOfClass("ScreenGui") 
+	local gui = core:FindFirstChild(UiId) 
 	if not gui then return end
 
 	local notif = Instance.new("Frame")
