@@ -7,11 +7,10 @@
 
 local players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local new = Instance.new
 
 if getgenv().perfa then warn("PerfaUI is running!") return end
 getgenv().perfa = true if players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core") then players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core"):ClearAllChildren() else 
-local coreFold = new("Folder") coreFold.Parent = players.LocalPlayer.PlayerGui coreFold.Name = "PerfaUI/Core" end
+local coreFold = Instance.new("Folder") coreFold.Parent = players.LocalPlayer.PlayerGui coreFold.Name = "PerfaUI/Core" end
 
 local msg = [[>
 
