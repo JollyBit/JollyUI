@@ -8,7 +8,9 @@
 local players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
-if getgenv().perfa then warn("PerfaUI is running! clearing and restarting!") players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core"):ClearAllChildren() end
+if players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core") then players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core"):Destroy() end
+local core = Instance.new("Folder") core.Name = "PerfaUI/Core" core.Parent = players.LocalPlayer.PlayerGui
+if getgenv().perfa then warn("PerfaUI is running! clearing and restarting!") end
 getgenv().perfa = true
 
 local msg = [[>
@@ -266,13 +268,13 @@ end
 
 -- > MAIN UI
 function PerfaUi.new(customName):ScreenGui
-	customName="PERFA-UI"
+	customName=customName or "PerfaUI"
 
 	local screengui = Instance.new("ScreenGui")
 	screengui.IgnoreGuiInset=true 
 	screengui.Name = customName
 	screengui.ResetOnSpawn=false 
-	screengui.Parent = players.LocalPlayer.PlayerGui
+	screengui.Parent = core	
 	
 	local coreFrame = PerfaUi:Frame(screengui,{Draggable=true}) 
 	coreFrame.Name="UI.CORE"
