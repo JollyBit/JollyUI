@@ -285,13 +285,6 @@ function PerfaUi.new(customName):ScreenGui
 	PerfaUi:Outline(SideBar)
 	PerfaUi:Corner(SideBar,{Radius=UDim.new(0,5)})
 
-	Extras.ListLayout(SideBar)
-	Extras.Padding(SideBar,5)
-
-	Extras.Tab(SideBar)
-	Extras.Tab(SideBar)
-	Extras.Tab(SideBar)
-
 	return screengui
 end
 
