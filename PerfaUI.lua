@@ -5,6 +5,14 @@
 
 --]]
 
+local players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local new = Instance.new
+
+if getgenv().perfa then warn("PerfaUI is running!") return end
+getgenv().perfa = true if players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core") then players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core"):ClearAllChildren() else 
+local coreFold = new("Folder") coreFold.Parent = players.LocalPlayer.PlayerGui coreFold.Name = "PerfaUI/Core" end
+
 local msg = [[>
 
 PERFA-UI MADE BY VERSAL
@@ -35,10 +43,6 @@ Late-N-Sea
 	TODO: keybind system
 
 ]]
-
-local players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local new = Instance.new
 
 local PerfaUi = {}
 
@@ -270,7 +274,7 @@ function PerfaUi.new(customName):ScreenGui
 	screengui.IgnoreGuiInset=true 
 	screengui.Name = customName
 	screengui.ResetOnSpawn=false 
-	screengui.Parent = players.LocalPlayer:WaitForChild("PlayerGui")
+	screengui.Parent = coreFold
 	
 	local coreFrame = PerfaUi:Frame(screengui,{Draggable=true}) 
 	coreFrame.Name="UI.CORE"
