@@ -4,7 +4,7 @@
   > By Late-n-sea @ versal
 
 --]]
-warn("SIKE!")
+
 local players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
