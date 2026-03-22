@@ -27,19 +27,58 @@ Late-N-Sea
 >
 ]]
 
--->
+--[[
 
+	TODO: tab switching
+	TODO: config save/load
+	TODO: dropdowns / sliders (done kinda?)
+	TODO: keybind system
+
+]]
+
+local players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local new = Instance.new
 
 local PerfaUi = {}
 
+-- > THEME
+PerfaUi.Theme = {
+	Background = Color3.fromRGB(48, 53, 62),
+	Accent = Color3.fromRGB(121, 87, 255),
+	Text = Color3.fromRGB(255,255,255)
+}
+
+function PerfaUi:NewTheme(themeTable)
+	if typeof(themeTable) ~= "table" then return end
+	
+	for k,v in pairs(themeTable) do
+		self.Theme[k] = v
+	end
+end
+
+-- > UTILITY
+function PerfaUi:Tween(instance, time, props, style, direction)
+	if not instance then return end
+	local info = TweenInfo.new(
+		time or 0.25,
+		style or Enum.EasingStyle.Quad,
+		direction or Enum.EasingDirection.Out
+	)
+	local tween = TweenService:Create(instance, info, props)
+	tween:Play()
+	return tween
+end
+
+-- > FOLDER
 local Folder = {}
 Folder.new = function(name,parent):Folder
-	parent = parent or game.Players.LocalPlayer
-	name = name or tostring(#game.Players.LocalPlayer:GetChildren())
+	parent = parent or players.LocalPlayer
+	name = name or tostring(#players.LocalPlayer:GetChildren())
 
 	local folder = Instance.new("Folder")
-	folder.Parent=parent folder.Name=name
+	folder.Parent=parent 
+	folder.Name=name
 	return folder
 end
 
@@ -52,9 +91,11 @@ Folder.clear = function(folder:Folder,whitelist:{string}?):()
 	end
 end
 
+-- > EXTRAS
 local Extras = {}
+
 Extras.ListLayout = function(parent,cVal:{Padding:UDim?,Direction:Enum.FillDirection?}):UIListLayout
-	parent = parent or game.Players.LocalPlayer.PlayerGui
+	parent = parent or players.LocalPlayer.PlayerGui
 	cVal = cVal or {}
 	local v2 = Instance.new("UIListLayout")
 	v2.Padding = cVal.Padding or UDim.new(0,5)
@@ -63,77 +104,226 @@ Extras.ListLayout = function(parent,cVal:{Padding:UDim?,Direction:Enum.FillDirec
 	return v2
 end
 
+Extras.Padding = function(parent, padding)
+	local pad = Instance.new("UIPadding")
+	padding = padding or 5
+	pad.PaddingTop = UDim.new(0,padding)
+	pad.PaddingBottom = UDim.new(0,padding)
+	pad.PaddingLeft = UDim.new(0,padding)
+	pad.PaddingRight = UDim.new(0,padding)
+	pad.Parent = parent
+	return pad
+end
+
+Extras.Label = function(parent, text)
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(1,0,0,25)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = text or "Label"
+	lbl.TextColor3 = PerfaUi.Theme.Text
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextScaled = true
+	lbl.Parent = parent
+	return lbl
+end
+
+Extras.Button = function(parent, text)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1,0,0,30)
+	btn.BackgroundColor3 = PerfaUi.Theme.Background
+	btn.Text = text or "Button"
+	btn.TextColor3 = PerfaUi.Theme.Text
+	btn.Font = Enum.Font.Gotham
+	btn.TextScaled = true
+	btn.BorderSizePixel = 0
+	btn.Parent = parent
+	
+	PerfaUi:Corner(btn,{Radius=UDim.new(0,5)})
+	PerfaUi:Outline(btn)
+
+	btn.MouseEnter:Connect(function()
+		PerfaUi:Tween(btn,0.15,{BackgroundColor3 = PerfaUi.Theme.Accent})
+	end)
+	btn.MouseLeave:Connect(function()
+		PerfaUi:Tween(btn,0.15,{BackgroundColor3 = PerfaUi.Theme.Background})
+	end)
+
+	return btn
+end
+
 Extras.Tab = function(parent):Frame
 	parent = parent or game
 	local newTab = PerfaUi:Frame(parent,{Size=UDim2.new(.9,0,0,30)})
 	PerfaUi:Outline(newTab)
 	PerfaUi:Corner(newTab,{Radius=UDim.new(0,5)})
 	
+	local gui = players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("PERFA-UI")
+	if not gui then return newTab end
+	
+	local tabFolder = gui:FindFirstChild("Tabs",true)
+	if not tabFolder then return newTab end
+	
 	local objectValue = new"ObjectValue"
-	objectValue.Parent=game.Players.LocalPlayer.PlayerGui:FindFirstChild("PERFA-UI"):FindFirstChild("Tabs",true)
-	objectValue.Name="Tab_#"..tostring(#objectValue.Parent:GetChildren())
-	objectValue.Value=newTab
+	objectValue.Parent = tabFolder
+	objectValue.Name = "Tab_#"..tostring(#tabFolder:GetChildren())
+	objectValue.Value = newTab
+	
 	return newTab
 end
 
+Extras.Dropdown = function(parent, data)
+	data = data or {}
+	
+	local title = data.Title or "Dropdown"
+	local options = data.Options or {"Option 1","Option 2"}
+	local callback = data.Callback or function() end
+	
+	local holder = Instance.new("Frame")
+	holder.Size = UDim2.new(1,0,0,30)
+	holder.BackgroundTransparency = 1
+	holder.Parent = parent
+	
+	local main = Instance.new("TextButton")
+	main.Size = UDim2.new(1,0,1,0)
+	main.BackgroundColor3 = PerfaUi.Theme.Background
+	main.Text = title
+	main.TextColor3 = PerfaUi.Theme.Text
+	main.Font = Enum.Font.Gotham
+	main.TextScaled = true
+	main.BorderSizePixel = 0
+	main.Parent = holder
+	
+	PerfaUi:Corner(main,{Radius=UDim.new(0,5)})
+	PerfaUi:Outline(main)
+	
+	local listFrame = Instance.new("Frame")
+	listFrame.Size = UDim2.new(1,0,0,0)
+	listFrame.Position = UDim2.new(0,0,1,5)
+	listFrame.BackgroundColor3 = PerfaUi.Theme.Background
+	listFrame.ClipsDescendants = true
+	listFrame.Parent = holder
+	
+	PerfaUi:Corner(listFrame,{Radius=UDim.new(0,5)})
+	PerfaUi:Outline(listFrame)
+	
+	local layout = Instance.new("UIListLayout")
+	layout.Parent = listFrame
+	
+	local opened = false
+	local optionButtons = {}
+	
+	local function refreshSize()
+		local total = 0
+		for _,b in pairs(optionButtons) do
+			total += b.Size.Y.Offset + 5
+		end
+		return total
+	end
+	
+	for _,opt in ipairs(options) do
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(1,0,0,25)
+		btn.BackgroundColor3 = PerfaUi.Theme.Background
+		btn.Text = tostring(opt)
+		btn.TextColor3 = PerfaUi.Theme.Text
+		btn.Font = Enum.Font.Gotham
+		btn.TextScaled = true
+		btn.BorderSizePixel = 0
+		btn.Parent = listFrame
+		
+		PerfaUi:Corner(btn,{Radius=UDim.new(0,4)})
+		
+		btn.MouseEnter:Connect(function()
+			PerfaUi:Tween(btn,0.15,{BackgroundColor3 = PerfaUi.Theme.Accent})
+		end)
+		btn.MouseLeave:Connect(function()
+			PerfaUi:Tween(btn,0.15,{BackgroundColor3 = PerfaUi.Theme.Background})
+		end)
+		
+		btn.MouseButton1Click:Connect(function()
+			main.Text = title..": "..tostring(opt)
+			callback(opt)
+		end)
+		
+		table.insert(optionButtons,btn)
+	end
+	
+	main.MouseButton1Click:Connect(function()
+		opened = not opened
+		
+		if opened then
+			local size = refreshSize()
+			PerfaUi:Tween(listFrame,0.25,{Size = UDim2.new(1,0,0,size)})
+		else
+			PerfaUi:Tween(listFrame,0.25,{Size = UDim2.new(1,0,0,0)})
+		end
+	end)
+	
+	return holder
+end
+
+-- > MAIN UI
 function PerfaUi.new(customName):ScreenGui
-	game:GetService("TestService"):Message(msg)
-	
-	--customName=customName or "PERFA-UI"
 	customName="PERFA-UI"
+
 	local screengui = Instance.new("ScreenGui")
-	screengui.IgnoreGuiInset=true screengui.Name = customName
-	screengui.ResetOnSpawn=false screengui.Parent = game.Players.LocalPlayer.PlayerGui
+	screengui.IgnoreGuiInset=true 
+	screengui.Name = customName
+	screengui.ResetOnSpawn=false 
+	screengui.Parent = players.LocalPlayer:WaitForChild("PlayerGui")
 	
-	-->
+	local coreFrame = PerfaUi:Frame(screengui,{Draggable=true}) 
+	coreFrame.Name="UI.CORE"
 	
-	local coreFrame = PerfaUi:Frame(screengui,{Draggable=true}) coreFrame.Name="UI.CORE"
 	PerfaUi:Corner(coreFrame,{Radius=UDim.new(0,5)})
 	PerfaUi:Outline(coreFrame)
 	PerfaUi:CloseButton(coreFrame)
-	
+
 	local coreTabs = Folder.new("Tabs",coreFrame)
-	
-	-->
-	
+
 	local SideBar = PerfaUi:ScrollingFrame(coreFrame,{Size=UDim2.new(0.25,0,1,0)})
 	PerfaUi:Outline(SideBar)
 	PerfaUi:Corner(SideBar,{Radius=UDim.new(0,5)})
-	
+
 	Extras.ListLayout(SideBar)
-	
-	-->
-	
+	Extras.Padding(SideBar,5)
+
 	Extras.Tab(SideBar)
 	Extras.Tab(SideBar)
 	Extras.Tab(SideBar)
+
+	return screengui
 end
 
-function PerfaUi:Frame(parent,cVal:{Anchor:Vector2,BackgroundgColor:Color3,BorderSize:number,Size:UDim2,Draggable:boolean,Active:boolean,Position:UDim2}?):Frame
+-- > FRAME
+function PerfaUi:Frame(parent,cVal):Frame
 	cVal=cVal or {}
 	parent = parent or game
 	local v1 = Instance.new("Frame",parent)
-	v1.BackgroundColor3=cVal.BackgroundgColor or Color3.new(0.188235, 0.207843, 0.243137)
+
+	v1.BackgroundColor3=cVal.BackgroundgColor or self.Theme.Background
 	v1.BorderSizePixel=cVal.BorderSize or 0
 	v1.Size = cVal.Size or UDim2.new(0,600,0,350)
 	v1.Draggable=cVal.Draggable or false
-	v1.Active=cVal.Active or true
+	v1.Active=cVal.Active ~= false
 	v1.Position=cVal.Position or UDim2.new(0,0,0,0)
 	v1.Name = cVal.Name or v1.Name
-	
+
 	v1:SetAttribute("OriginalSize",v1.Size)
 	return v1
 end
 
-function PerfaUi:ScrollingFrame(parent,cVal:{Anchor:Vector2,BackgroundgColor:Color3,BorderSize:number,Size:UDim2,Draggable:boolean,Active:boolean,Position:UDim2}?):Frame
+-- > SCROLLING FRAME
+function PerfaUi:ScrollingFrame(parent,cVal):ScrollingFrame
 	cVal=cVal or {}
 	parent = parent or game
+
 	local v1 = Instance.new("ScrollingFrame",parent)
-	v1.BackgroundColor3=cVal.BackgroundgColor or Color3.new(0.188235, 0.207843, 0.243137)
+	v1.BackgroundColor3=cVal.BackgroundgColor or self.Theme.Background
 	v1.BorderSizePixel=cVal.BorderSize or 0
 	v1.Size = cVal.Size or UDim2.new(0,600,0,350)
 	v1.Draggable=cVal.Draggable or false
-	v1.Active=cVal.Active or true
+	v1.Active=cVal.Active ~= false
 	v1.Position=cVal.Position or UDim2.new(0,0,0,0)
 	v1.Name = cVal.Name or v1.Name
 	v1.ScrollBarImageTransparency = cVal.ScrollBarTransparency or 1
@@ -142,106 +332,63 @@ function PerfaUi:ScrollingFrame(parent,cVal:{Anchor:Vector2,BackgroundgColor:Col
 	return v1
 end
 
+-- > CLOSE BUTTON
 function PerfaUi:CloseButton(parent)
 	if not parent or not parent:IsA("Frame") then return end
+	
 	local v1 = Instance.new("TextButton",parent)
-	v1.BackgroundColor3 = Color3.new(0.188235, 0.207843, 0.243137)
 	v1.Size = UDim2.new(0,20,0,20)
 	v1.AnchorPoint=Vector2.new(1,0)
 	v1.Position = UDim2.new(1,0,0,0)
 	v1.Text = "X"
 	v1.TextColor3 = Color3.new(1,1,1)
-	v1.Font = Enum.Font.Arial
+	v1.BackgroundColor3 = self.Theme.Background
 	v1.BorderSizePixel = 0
 	v1.TextScaled = true
 	v1.ZIndex=999
 	
-	PerfaUi:Corner(v1,{Radius=UDim.new(0,5)})
-	PerfaUi:Outline(v1,{Context=Enum.ApplyStrokeMode.Border})
-	
+	self:Corner(v1,{Radius=UDim.new(0,5)})
+	self:Outline(v1,{Context=Enum.ApplyStrokeMode.Border})
+
 	coroutine.wrap(function()
-		local new = false
-		local stored = {}
-		local cool = {on=false,timer=0.3}
-		local stored = {} :: {[Instance]:any}
+		local minimized = false
+		local debounce = false
+
 		v1.MouseButton1Click:Connect(function()
-			if cool.on then return end
-			cool.on = true
-			task.delay(cool.timer,function() cool.on = false end)
-			new = not new
-			local ts = game:GetService("TweenService")
-			local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			if debounce then return end
+			debounce = true
+			task.delay(0.3,function() debounce = false end)
 
-			if new then
+			minimized = not minimized
+
+			if minimized then
 				v1.Text="O"
-				local osize:UDim2 = parent:GetAttribute("OriginalSize")
-				ts:Create(parent,TweenInfo.new(0.5,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),
-					{Size = UDim2.new(0,80,0,20)}):Play()
-
-				for _, child in pairs(parent:GetDescendants()) do
-					if child ~= v1 then
-						stored[child] = {}
-
-						if child:IsA("GuiObject") then
-							stored[child].BackgroundTransparency = child.BackgroundTransparency
-							ts:Create(child,tweenInfo,{BackgroundTransparency=1}):Play()
-						end
-						if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-							stored[child].TextTransparency = child.TextTransparency
-							ts:Create(child,tweenInfo,{TextTransparency=1}):Play()
-						end
-						if child:IsA("ImageLabel") or child:IsA("ImageButton") then
-							stored[child].ImageTransparency = child.ImageTransparency
-							ts:Create(child,tweenInfo,{ImageTransparency=1}):Play()
-						end
-						for _, s in pairs(child:GetDescendants()) do
-							if s:IsA("UIStroke") then
-								stored[child][s] = s.Transparency
-								ts:Create(s,tweenInfo,{Transparency=1}):Play()
-							end
-						end
-					end
-				end
+				self:Tween(parent,0.3,{Size = UDim2.new(0,80,0,20)})
 			else
 				v1.Text="X"
-				local osize:UDim2 = parent:GetAttribute("OriginalSize")
-				ts:Create(parent,TweenInfo.new(0.5,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),
-					{Size = osize}):Play()
-
-				for child, values in pairs(stored) do
-					if child and child.Parent then warn(child,values)
-						if values.BackgroundTransparency ~= nil then
-							ts:Create(child,tweenInfo,{BackgroundTransparency=values.BackgroundTransparency}):Play()
-						end
-						if values.TextTransparency ~= nil then
-							ts:Create(child,tweenInfo,{TextTransparency=values.TextTransparency}):Play()
-						end
-						if values.ImageTransparency ~= nil then
-							ts:Create(child,tweenInfo,{ImageTransparency=values.ImageTransparency}):Play()
-						end
-						for k, v in pairs(values) do
-							if typeof(k)=="Instance" and k:IsA("UIStroke") then
-								ts:Create(k,tweenInfo,{Transparency=v}):Play()
-							end
-						end
-					end
+				local osize = parent:GetAttribute("OriginalSize")
+				if osize then
+					self:Tween(parent,0.3,{Size = osize})
 				end
 			end
 		end)
 	end)()
+
 	return v1
 end
 
-function PerfaUi:Outline(parent,cVal:{string}?):UIStroke
+-- > OUTLINE
+function PerfaUi:Outline(parent,cVal):UIStroke
 	cVal=cVal or {}
 	parent = parent or game
 	local v1 = Instance.new("UIStroke",parent)
-	v1.Color = cVal.Color or Color3.new(0.47451, 0.341176, 1)
+	v1.Color = cVal.Color or self.Theme.Accent
 	v1.ApplyStrokeMode = cVal.Context or Enum.ApplyStrokeMode.Contextual
 	return v1
 end
 
-function PerfaUi:Corner(instance,cVal:{Radius:UDim}?):UICorner
+-- > CORNER
+function PerfaUi:Corner(instance,cVal):UICorner
 	instance = instance or game
 	cVal = cVal or {}
 	local corner = Instance.new("UICorner")
