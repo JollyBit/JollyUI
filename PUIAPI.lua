@@ -8,7 +8,7 @@
 local players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
-if getgenv().perfa then warn("PerfaUI is running! clearing and restarting!") layers.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core"):ClearAllChildren() end
+if getgenv().perfa then warn("PerfaUI is running! clearing and restarting!") players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI/Core"):ClearAllChildren() end
 getgenv().perfa = true
 
 local msg = [[>
