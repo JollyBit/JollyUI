@@ -413,7 +413,6 @@ function PerfaUi:CloseButton(parent)
 							ImageTransparency = child.ImageTransparency and 1 or nil
 						}):Play()
 					end
-					-- store UIStroke transparency if present
 					for _, stroke in pairs(child:GetDescendants()) do
 						if stroke:IsA("UIStroke") then
 							self._closeButtonData[parent][stroke] = stroke.Transparency
