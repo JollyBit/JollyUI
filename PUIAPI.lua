@@ -290,7 +290,7 @@ end
 -- > NOTIFICATIONS
 function PerfaUi:Notification(text)
 	if not text then return end
-	local gui = players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI") 
+	local gui = core:FindFirstChildOfClass("ScreenGui") 
 	if not gui then return end
 
 	local notif = Instance.new("Frame")
