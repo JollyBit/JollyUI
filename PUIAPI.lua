@@ -428,4 +428,5 @@ function PerfaUi:Corner(instance,cVal):UICorner
 	return corner
 end
 
+PerfaUi.Extras = Extras
 return PerfaUi
