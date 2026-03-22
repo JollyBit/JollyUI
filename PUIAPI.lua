@@ -268,28 +268,60 @@ end
 
 -- > MAIN UI
 function PerfaUi.new(customName):ScreenGui
-	customName=customName or "PerfaUI"
+	customName = customName or "PerfaUI"
 
 	local screengui = Instance.new("ScreenGui")
-	screengui.IgnoreGuiInset=true 
+	screengui.IgnoreGuiInset = true 
 	screengui.Name = customName
-	screengui.ResetOnSpawn=false 
+	screengui.ResetOnSpawn = false 
 	screengui.Parent = core	
 	
 	local coreFrame = PerfaUi:Frame(screengui,{Draggable=true}) 
-	coreFrame.Name="UI.CORE"
+	coreFrame.Name = "UI.CORE"
 	
 	PerfaUi:Corner(coreFrame,{Radius=UDim.new(0,5)})
 	PerfaUi:Outline(coreFrame)
 	PerfaUi:CloseButton(coreFrame)
 
 	local coreTabs = Folder.new("Tabs",coreFrame)
-
-	local SideBar = PerfaUi:ScrollingFrame(coreFrame,{Size=UDim2.new(0.25,0,1,0)})
-	PerfaUi:Outline(SideBar)
-	PerfaUi:Corner(SideBar,{Radius=UDim.new(0,5)})
-
 	return screengui
+end
+
+-- > NOTIFICATIONS
+function PerfaUi:Notification(text)
+	if not text then return end
+	local gui = players.LocalPlayer.PlayerGui:FindFirstChild("PerfaUI") 
+	if not gui then return end
+
+	local notif = Instance.new("Frame")
+	notif.Size = UDim2.new(0,300,0,50)
+	notif.Position = UDim2.new(0.5,-150,0.1,0)
+	notif.BackgroundColor3 = self.Theme.Background
+	notif.BorderSizePixel = 0
+	notif.AnchorPoint = Vector2.new(0,0)
+	notif.Parent = gui
+
+	self:Corner(notif,{Radius=UDim.new(0,5)})
+	self:Outline(notif)
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -10, 1, -10)
+	label.Position = UDim2.new(0,5,0,5)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = self.Theme.Text
+	label.Font = Enum.Font.Gotham
+	label.TextScaled = true
+	label.Parent = notif
+	
+	self:Tween(notif,0.3,{Position = UDim2.new(0.5,-150,0.12,0)})
+	task.delay(3,function()
+		self:Tween(notif,0.3,{Position = UDim2.new(0.5,-150,0.05,0)})
+		task.wait(0.35)
+		if notif then notif:Destroy() end
+	end)
+
+	return notif
 end
 
 -- > FRAME
