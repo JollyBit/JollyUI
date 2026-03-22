@@ -366,20 +366,23 @@ end
 -- > CLOSE BUTTON
 function PerfaUi:CloseButton(parent)
 	if not parent or not parent:IsA("Frame") then return end
-	
-	local v1 = Instance.new("TextButton",parent)
-	v1.Size = UDim2.new(0,20,0,20)
-	v1.AnchorPoint=Vector2.new(1,0)
-	v1.Position = UDim2.new(1,0,0,0)
+
+	local v1 = Instance.new("TextButton", parent)
+	v1.Size = UDim2.new(0, 20, 0, 20)
+	v1.AnchorPoint = Vector2.new(1, 0)
+	v1.Position = UDim2.new(1, 0, 0, 0)
 	v1.Text = "X"
-	v1.TextColor3 = Color3.new(1,1,1)
+	v1.TextColor3 = Color3.new(1, 1, 1)
 	v1.BackgroundColor3 = self.Theme.Background
 	v1.BorderSizePixel = 0
 	v1.TextScaled = true
-	v1.ZIndex=999
+	v1.ZIndex = 999
+
+	self:Corner(v1, {Radius = UDim.new(0, 5)})
+	self:Outline(v1, {Context = Enum.ApplyStrokeMode.Border})
 	
-	self:Corner(v1,{Radius=UDim.new(0,5)})
-	self:Outline(v1,{Context=Enum.ApplyStrokeMode.Border})
+	self._closeButtonData = self._closeButtonData or {}
+	self._closeButtonData[parent] = {}
 
 	coroutine.wrap(function()
 		local minimized = false
@@ -388,18 +391,59 @@ function PerfaUi:CloseButton(parent)
 		v1.MouseButton1Click:Connect(function()
 			if debounce then return end
 			debounce = true
-			task.delay(0.3,function() debounce = false end)
+			task.delay(0.3, function() debounce = false end)
 
 			minimized = not minimized
+			local ts = game:GetService("TweenService")
+			local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 			if minimized then
-				v1.Text="O"
-				self:Tween(parent,0.3,{Size = UDim2.new(0,80,0,20)})
+				v1.Text = "O"
+				self:Tween(parent, 0.3, {Size = UDim2.new(0, 80, 0, 20)})
+				for _, child in pairs(parent:GetDescendants()) do
+					if child:IsA("GuiObject") then
+						self._closeButtonData[parent][child] = {
+							BackgroundTransparency = child.BackgroundTransparency,
+							TextTransparency = child.TextTransparency,
+							ImageTransparency = child.ImageTransparency
+						}
+						ts:Create(child, tweenInfo, {
+							BackgroundTransparency = 1,
+							TextTransparency = child.TextTransparency and 1 or nil,
+							ImageTransparency = child.ImageTransparency and 1 or nil
+						}):Play()
+					end
+					-- store UIStroke transparency if present
+					for _, stroke in pairs(child:GetDescendants()) do
+						if stroke:IsA("UIStroke") then
+							self._closeButtonData[parent][stroke] = stroke.Transparency
+							ts:Create(stroke, tweenInfo, {Transparency = 1}):Play()
+						end
+					end
+				end
 			else
-				v1.Text="X"
+				v1.Text = "X"
 				local osize = parent:GetAttribute("OriginalSize")
 				if osize then
-					self:Tween(parent,0.3,{Size = osize})
+					self:Tween(parent, 0.3, {Size = osize})
+				end
+				
+				local stored = self._closeButtonData[parent] or {}
+				for child, vals in pairs(stored) do
+					if child and child.Parent then
+						if vals.BackgroundTransparency ~= nil then
+							ts:Create(child, tweenInfo, {BackgroundTransparency = vals.BackgroundTransparency}):Play()
+						end
+						if vals.TextTransparency ~= nil then
+							ts:Create(child, tweenInfo, {TextTransparency = vals.TextTransparency}):Play()
+						end
+						if vals.ImageTransparency ~= nil then
+							ts:Create(child, tweenInfo, {ImageTransparency = vals.ImageTransparency}):Play()
+						end
+						if typeof(vals) == "number" and child:IsA("UIStroke") then
+							ts:Create(child, tweenInfo, {Transparency = vals}):Play()
+						end
+					end
 				end
 			end
 		end)
